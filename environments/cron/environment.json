@@ -1,0 +1,41 @@
+{
+  "name": "cron",
+  "version": "1.0.0",
+  "display_name": "Schedule",
+  "description": "Emits an event on a schedule, so recurring work (a morning brief, a weekly review) arrives the same way a message does.",
+  "entry": "environment.mjs",
+  "protocol": 1,
+  "capabilities": [
+    "deliver"
+  ],
+  "settings": [
+    {
+      "key": "schedule",
+      "type": "string",
+      "required": true,
+      "title": "Schedule",
+      "description": "Five fields: minute hour day-of-month month day-of-week. Supports * , - / and ranges, e.g. \"0 9 * * 1-5\" for weekday mornings."
+    },
+    {
+      "key": "text",
+      "type": "string",
+      "required": true,
+      "title": "Prompt",
+      "description": "What to ask the bot each time the schedule fires."
+    },
+    {
+      "key": "timezone",
+      "type": "string",
+      "title": "Time zone",
+      "description": "IANA name such as Europe/Berlin. Leave empty to use Sun's local time.",
+      "default": ""
+    },
+    {
+      "key": "catch_up",
+      "type": "bool",
+      "title": "Run once after downtime",
+      "description": "When Sun was stopped across a scheduled time, run the most recent missed schedule once at the next start. Off means a missed schedule is simply skipped.",
+      "default": true
+    }
+  ]
+}

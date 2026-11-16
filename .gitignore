@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+dist/
+test/
+
+# Local fixture: the reference adapter used by the conformance suite. It is kept
+# on disk so `node test/conformance.mjs` works in a working copy, but it is not
+# published in this catalogue, so neither its source nor its bundle is committed.
+environments/echo/
+
+# Build and OS noise
+.DS_Store
+*.log

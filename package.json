@@ -1,0 +1,15 @@
+{
+  "name": "@tresorbot/environments",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Environment adapter catalogue for TresorBot Sun",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "pack": "node pack.mjs",
+    "test": "node test/conformance.mjs && node test/manifest.test.mjs"
+  },
+  "dependencies": {}
+}

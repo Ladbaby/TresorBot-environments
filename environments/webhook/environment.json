@@ -1,0 +1,38 @@
+{
+  "name": "webhook",
+  "version": "1.0.0",
+  "display_name": "Webhook",
+  "description": "Turns an HTTP POST into an event, so an external service (GitHub, a form, a script) can start work.",
+  "entry": "environment.mjs",
+  "protocol": 1,
+  "capabilities": ["webhook", "deliver"],
+  "settings": [
+    {
+      "key": "secret",
+      "type": "string",
+      "sensitive": true,
+      "title": "Signing secret",
+      "description": "Shared secret for the HMAC-SHA256 signature header. Enter env:NAME to read it from Sun's environment instead of storing it."
+    },
+    {
+      "key": "signature_header",
+      "type": "string",
+      "title": "Signature header",
+      "description": "Header carrying the signature. Accepts a sha256=<hex> prefix, as GitHub sends.",
+      "default": "X-Hub-Signature-256"
+    },
+    {
+      "key": "prompt",
+      "type": "string",
+      "title": "Prompt",
+      "description": "Text sent to the bot. Supports {body}, {event} and {action} placeholders. Leave empty to send the payload as JSON.",
+      "default": "A webhook arrived:\n{body}"
+    },
+    {
+      "key": "kinds",
+      "type": "string_list",
+      "title": "Accept these event kinds",
+      "description": "Only forward payloads whose \"action\" or \"event\" field is in this list. Leave empty to accept everything."
+    }
+  ]
+}
