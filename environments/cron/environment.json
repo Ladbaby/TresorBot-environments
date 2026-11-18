@@ -2,11 +2,13 @@
   "name": "cron",
   "version": "1.0.0",
   "display_name": "Schedule",
-  "description": "Emits an event on a schedule, so recurring work (a morning brief, a weekly review) arrives the same way a message does.",
+  "description": "Emits an event on a schedule, so recurring work (a morning brief, a weekly review) arrives the same way a message does. Exposes tools so a bot can inspect its schedule, and \u2014 because schedules are stored as Sun instances \u2014 lets a bot create and delete its own.",
   "entry": "environment.mjs",
   "protocol": 1,
   "capabilities": [
-    "deliver"
+    "deliver",
+    "tools",
+    "manage"
   ],
   "settings": [
     {
@@ -37,5 +39,8 @@
       "description": "When Sun was stopped across a scheduled time, run the most recent missed schedule once at the next start. Off means a missed schedule is simply skipped.",
       "default": true
     }
-  ]
+  ],
+  "limits": {
+    "max_instances": 32
+  }
 }

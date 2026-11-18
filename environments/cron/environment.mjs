@@ -155,6 +155,88 @@ function createInstance(ctx) {
       return { delivered: true };
     },
 
+    /**
+     * The tools this environment offers to the bot.
+     *
+     * Declared here rather than in the manifest so a tool can describe the
+     * instance's *current* settings: a schema that cannot mention the real
+     * schedule is less useful than one that can.
+     */
+    async listTools() {
+      return [
+        {
+          name: "describe_schedule",
+          description: "Show this schedule's expression, time zone, prompt and whether it is currently armed.",
+          parameters: { type: "object", properties: {}, additionalProperties: false },
+        },
+        {
+          name: "next_run",
+          description: "Report the next time this schedule will fire, in UTC.",
+          parameters: {
+            type: "object",
+            properties: {
+              count: {
+                type: "integer",
+                description: "How many upcoming times to list. Defaults to 1.",
+              },
+            },
+            additionalProperties: false,
+          },
+        },
+        {
+          name: "run_now",
+          description: "Trigger this schedule immediately, in addition to its normal times. Use when the owner asks for the brief now.",
+          parameters: {
+            type: "object",
+            properties: {
+              reason: { type: "string", maxLength: 200, description: "Why it is being run early." },
+            },
+            required: ["reason"],
+            additionalProperties: false,
+          },
+        },
+      ];
+    },
+
+    async callTool({ name, arguments: args = {} }) {
+      switch (name) {
+        case "describe_schedule":
+          return {
+            expression: schedule?.expression ?? null,
+            timezone: timeZone || "local",
+            prompt: settings.text ?? "",
+            catch_up: settings.catch_up !== false,
+            armed: !stopped && schedule !== null,
+            last_fired: (await cursor.get(CURSOR_KEY)) || null,
+          };
+        case "next_run": {
+          const count = Math.min(Math.max(Number(args?.count ?? 1) || 1, 1), 5);
+          const upcoming = [];
+          let from = Date.now();
+          // Bounded scan: a schedule that never matches must answer rather than
+          // search forever. Two years of minutes covers any real expression.
+          for (let i = 0; i < 2 * 366 * 24 * 60 && upcoming.length < count; i++) {
+            from += 60000 - (from % 60000);
+            // matches() reads a normalised wall-clock date, so the time zone is
+            // applied first — the same conversion the scheduled tick uses.
+            if (matches(schedule, asDate(zonedParts(new Date(from), timeZone)))) {
+              upcoming.push(new Date(from).toISOString());
+              from += 60000;
+            }
+          }
+          return { next: upcoming };
+        }
+        case "run_now":
+          if (stopped) throw new Error("this environment is stopped");
+          // The same path a scheduled tick takes, so a manual run is
+          // indistinguishable downstream from a timed one.
+          await tick(false, `manual: ${String(args?.reason ?? "").slice(0, 200)}`);
+          return { triggered: true, at: new Date().toISOString() };
+        default:
+          throw new Error(`unknown tool ${name}`);
+      }
+    },
+
     async stop() {
       stopped = true;
       if (timer) clearTimeout(timer);
