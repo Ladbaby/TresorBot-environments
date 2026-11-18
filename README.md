@@ -29,12 +29,39 @@ an adapter is small. It never touches the database, never decides which bot a
 conversation belongs to, and never retries. It reads its source, calls `emit()`,
 and tracks where it is through a cursor.
 
-### Tools are designed but not implemented
+### Tools
 
-An adapter may declare a `tools` capability. The intended contract is that Sun
-asks for the adapter's tool list and routes a bot's tool call back to it, so a
-bot can act on the environment rather than only receive from it. The wire shape
-is agreed; nothing calls it yet. Do not rely on it in v1.
+An adapter may declare the `tools` capability and then implement two functions:
+
+```js
+async listTools() {
+  return [{
+    name: "next_run",                 // ^[a-z][a-z0-9_]*$, max 40 chars
+    description: "Report the next time this schedule will fire.",
+    parameters: {                     // see the schema subset below
+      type: "object",
+      properties: { count: { type: "integer" } },
+      additionalProperties: false,
+    },
+  }];
+}
+
+async callTool({ name, arguments: args, callId }) {
+  // Return any JSON-serialisable value, or throw with a message the model can read.
+}
+```
+
+Sun never advertises these directly. Instead it adds three meta-tools to every
+bot — `TresorBotToolSearch`, `TresorBotToolDescribe`, `TresorBotToolCall` — and a
+bot discovers the rest at runtime. That is deliberate: an adapter's tool set is
+unbounded and third-party, and putting it in the prompt would spend context on
+tools the bot never uses. When the catalogue overflows its 8 KiB budget, Sun
+shortens descriptions first, then drops entries, always appending an explicit
+count of what was withheld.
+
+**Who may use them.** An instance's tools are available only to the bot the
+instance is bound to. There is no separate grant: it is the same rule as
+messages and delegation, so one operator concept covers all three.
 
 ## Installing an environment
 
